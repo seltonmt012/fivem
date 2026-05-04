@@ -755,6 +755,7 @@ const BYTE g_VertyShader[] = {
 #include <dwmapi.h>
 #include <mmsystem.h>
 #include <setupapi.h>
+#include "../citicore/LaunchMode.h"
 
 static const GUID GUID_DEVINTERFACE_DISPLAY_ADAPTER = { 0x5b45201d, 0xf2f2, 0x4f3b, { 0x85, 0xbb, 0x30, 0xff, 0x1f, 0x95, 0x35, 0x99 } };
 
@@ -1294,6 +1295,12 @@ std::unique_ptr<TenUIBase> UI_InitTen()
 	static HostSharedData<CfxState> initState("CfxInitState");
 
 	if (initState->isReverseGame)
+	{
+		forceOff = true;
+	}
+
+	// Wine doesn't implement WindowsXamlManager properly
+	if (CfxIsWine())
 	{
 		forceOff = true;
 	}
