@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 350
     env:
       PROGRAM: five
+      GYP_MSVS_VERSION: '2022'
+      npm_config_msvs_version: '2022'
     steps:
       - name: Checkout wine-win10 to C-drive
         shell: bash
@@ -35,8 +37,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+      - name: Setup MSVC developer environment (adds MSBuild + VSINSTALLDIR for node-gyp)
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Generate and build five release
         shell: bash
