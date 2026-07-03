@@ -1,8 +1,62 @@
 name: build-linux-client
+
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
 jobs:
-  hello:
-    runs-on: ubuntu-latest
+  build:
+    name: Build FiveM five release for Wine
+    runs-on: windows-latest
+    timeout-minutes: 350
+    env:
+      PROGRAM: five
     steps:
-      - run: echo hello
+      - name: Checkout wine-win10 to C-drive
+        shell: bash
+        run: |
+          mkdir -p /c/b && cd /c/b
+          git init .
+          git config core.symlinks true
+          git remote add origin https://github.com/seltonmt012/fivem.git
+          git pull origin wine-win10 --depth=1
+          git submodule update --jobs=8 --init --depth=1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build five release
+        shell: bash
+        run: |
+          cd /c/b
+          python -m pip install setuptools || py -m pip install setuptools || true
+          chmod +x .github/workflows/ci/build_windows.sh
+          .github/workflows/ci/build_windows.sh /c/b/dep 4
+
+      - name: List build output
+        if: always()
+        shell: bash
+        run: |
+          echo "=== code/bin/five ==="
+          ls -la /c/b/code/bin/five 2>/dev/null || echo "no bin/five"
+          echo "=== release listing ==="
+          ls /c/b/code/bin/five/release 2>/dev/null | head -60 || echo "no release dir"
+
+      - name: Upload client artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fivem-five-release
+          path: 'C:\b\code\bin\five\release'
+          if-no-files-found: warn
+          retention-days: 7
