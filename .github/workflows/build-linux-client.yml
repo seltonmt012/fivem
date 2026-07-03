@@ -35,13 +35,19 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Build five release
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Generate and build five release
         shell: bash
         run: |
           cd /c/b
           python -m pip install setuptools || py -m pip install setuptools || true
-          chmod +x .github/workflows/ci/build_windows.sh
-          .github/workflows/ci/build_windows.sh /c/b/dep 4
+          pwsh ./fxd.ps1 get-chrome
+          ./prebuild.cmd
+          pwsh ./fxd.ps1 gen -game five
+          cd code/build/five
+          MSBuild.exe CitizenMP.sln -t:build -restore -p:RestorePackagesConfig=true -p:preferredtoolarchitecture=x64 -p:configuration=release -maxcpucount:4 -v:m -fl1 "-flp1:logfile=errors.log;errorsonly" || { echo '=== errors.log ==='; cat errors.log 2>/dev/null | tail -80; exit 1; }
 
       - name: List build output
         if: always()
@@ -50,7 +56,7 @@ jobs:
           echo "=== code/bin/five ==="
           ls -la /c/b/code/bin/five 2>/dev/null || echo "no bin/five"
           echo "=== release listing ==="
-          ls /c/b/code/bin/five/release 2>/dev/null | head -60 || echo "no release dir"
+          ls /c/b/code/bin/five/release 2>/dev/null | head -80 || echo "no release dir"
 
       - name: Upload client artifact
         if: always()
