@@ -83,14 +83,9 @@ jobs:
             Copy-Item -Force "$($cef.FullName)\Resources\*.pak" "$L\bin\cef\" -ErrorAction SilentlyContinue
             Copy-Item -Force "$($cef.FullName)\Resources\locales\en-US.pak" "$L\bin\cef\" -ErrorAction SilentlyContinue
           } else { Write-Host "WARNING: no CEF dir found in vendor" }
-          Write-Host "=== strip proprietary 'adhesive' (anti-cheat, not in OSS build / no Wine support) from components.json ==="
-          $cj = "$L\components.json"
-          if (Test-Path $cj) {
-            $comps = Get-Content $cj -Raw | ConvertFrom-Json
-            $comps = $comps | Where-Object { $_ -ne 'adhesive' }
-            ($comps | ConvertTo-Json) | Set-Content -Encoding ascii $cj
-            Write-Host "components.json now has $($comps.Count) entries"
-          }
+          # NOTE: keep 'adhesive' in components.json — under Wine the client auto-substitutes
+          # the open-source 'sticky' component (ComponentLoader.cpp) and shows an "Insecure mode"
+          # notice. Stripping adhesive breaks that substitution (FatalError: Unknown component adhesive).
           Write-Host "=== layout checks ==="
           Write-Host ("components.json: " + (Test-Path "$L\components.json"))
           Write-Host ("citizen\ui.zip:  " + (Test-Path "$L\citizen\ui.zip"))
