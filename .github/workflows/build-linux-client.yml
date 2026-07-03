@@ -37,6 +37,22 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install Windows 11 SDK 10.0.22000.0 (required by fxd gen projects)
+        shell: pwsh
+        run: |
+          $vsInstaller = "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $vsPath = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+          Write-Host "Adding Windows11SDK.22000 component..."
+          $p = Start-Process -FilePath $vsInstaller -ArgumentList @(
+            "modify","--installPath","`"$vsPath`"",
+            "--add","Microsoft.VisualStudio.Component.Windows11SDK.22000",
+            "--quiet","--norestart","--force","--nocache"
+          ) -Wait -PassThru
+          Write-Host "vs_installer exit code: $($p.ExitCode)"
+          # verify
+          $sdk = "C:\Program Files (x86)\Windows Kits\10\Include\10.0.22000.0"
+          if (Test-Path $sdk) { Write-Host "SDK 22000 present: $sdk" } else { Write-Host "WARNING: SDK 22000 not found after install"; Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\Include' | Select-Object Name }
+
       - name: Setup MSVC developer environment (adds MSBuild + VSINSTALLDIR for node-gyp)
         uses: ilammy/msvc-dev-cmd@v1
         with:
