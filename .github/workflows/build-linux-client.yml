@@ -10,7 +10,7 @@ permissions:
 jobs:
   build:
     name: Build FiveM five release for Wine
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 350
     env:
       PROGRAM: five
